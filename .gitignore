@@ -5,3 +5,8 @@ dist
 # configurações locais deste Mac
 .mcp.json
 .firebase/
+
+# prints e anotações locais (não vão para o GitHub)
+WhatsApp Image*
+*.jpeg
+PROMPT-*.md
