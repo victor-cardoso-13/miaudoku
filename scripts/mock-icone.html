@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Miaudoku – mock do ícone novo</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 28px 24px 60px; background: #e9e2d6; font-family: Nunito, system-ui, sans-serif; color: #3b2f2a; }
+  h1 { font-family: Fredoka; font-weight: 700; margin: 0 0 4px; }
+  .explica { margin: 0 0 22px; opacity: .7; max-width: 900px; line-height: 1.5; }
+  .opcoes { display: flex; gap: 28px; flex-wrap: wrap; }
+  .opcao { background: #fffaf2; border-radius: 22px; padding: 18px; width: 250px; box-shadow: 0 6px 18px #0001; }
+  .opcao h2 { font-family: Fredoka; font-size: 19px; margin: 0 0 4px; }
+  .opcao p { font-size: 13px; opacity: .7; margin: 0 0 12px; line-height: 1.4; }
+  .grande svg { width: 214px; height: 214px; border-radius: 48px; display: block; box-shadow: 0 6px 16px #0002; }
+  .tela { margin-top: 28px; width: 390px; padding: 26px 22px; border-radius: 36px;
+    background: linear-gradient(160deg, #6d8fb8, #a77fb0 60%, #e0a487); display: grid;
+    grid-template-columns: repeat(4, 1fr); gap: 20px 12px; }
+  .app { display: flex; flex-direction: column; align-items: center; gap: 5px; color: #fff; font-size: 11px; font-weight: 600; }
+  .app svg, .app img { width: 62px; height: 62px; border-radius: 14px; display: block; }
+  .vazio { width: 62px; height: 62px; border-radius: 14px; background: #ffffff33; }
+</style>
+</head>
+<body>
+<h1>Ícone novo do Miaudoku</h1>
+<p class="explica">O ícone de hoje ainda usa o gato emoji 🐱. Abaixo, 3 propostas com o gatinho desenhado do jogo (o "Creme").
+Embaixo, como cada um fica pequeno na tela do iPhone, ao lado do ícone atual.</p>
+<div class="opcoes" id="opcoes"></div>
+<div class="tela" id="tela"></div>
+
+<script>
+const TINTA = '#3b2f2a';
+const COR = ['#f4c6cc', '#c4dcf2', '#f7e3a3', '#cde8c6', '#ddd0f3', '#f8d0aa', '#bfe4de', '#dddad5', '#ead8c3', '#e0e3b4'];
+const CABECA = 'M4.6 9.6 5.2 3.6 9.3 6.4Q12 5.6 14.7 6.4L18.8 3.6 19.4 9.6Q21 12.2 20.5 15.1 19.6 20.3 12 20.6 4.4 20.3 3.5 15.1 3 12.2 4.6 9.6Z';
+const CREME = `<path d="${CABECA}" fill="#fffaf2" stroke="${TINTA}" stroke-width="1.5" stroke-linejoin="round"/>
+  <path d="M6.3 6.6 6.6 9M17.7 6.6 17.4 9" stroke="#f4a7b0" stroke-width="1.3" stroke-linecap="round"/>
+  <circle cx="9.2" cy="12.6" r="1.05" fill="${TINTA}"/><circle cx="14.8" cy="12.6" r="1.05" fill="${TINTA}"/>
+  <circle cx="7.6" cy="15" r="1.1" fill="#f4c6cc"/><circle cx="16.4" cy="15" r="1.1" fill="#f4c6cc"/>
+  <path d="M11.2 14.6h1.6l-.8.9z" fill="#e5848f"/>
+  <path d="M2.6 14.2 6 14.8M2.9 16.6 6.1 15.9M21.4 14.2 18 14.8M21.1 16.6 17.9 15.9" stroke="${TINTA}" stroke-width=".8" stroke-linecap="round"/>`;
+const gato = (x, y, lado) => `<g transform="translate(${x} ${y}) scale(${lado / 24})">${CREME}</g>`;
+const xis = (cx, cy, t) => `<path d="M${cx - t} ${cy - t}L${cx + t} ${cy + t}M${cx + t} ${cy - t}L${cx - t} ${cy + t}" stroke="${TINTA}" stroke-opacity=".8" stroke-width="${t * .42}" stroke-linecap="round"/>`;
+
+/** A: igual ao de hoje (3×3 de cores), com o gatinho novo no meio. */
+function iconeA() {
+  const ordem = [0, 1, 2, 3, null, 4, 5, 6, 8];
+  let s = `<rect width="512" height="512" fill="${TINTA}"/>`;
+  ordem.forEach((c, i) => {
+    const x = 6 + (i % 3) * 168.7, y = 6 + Math.floor(i / 3) * 168.7;
+    s += `<rect x="${x}" y="${y}" width="162.7" height="162.7" fill="${c === null ? '#fdf7ee' : COR[c]}"/>`;
+  });
+  return s + gato(181, 178, 150);
+}
+
+/** B: uma mini-fase 4×4 resolvida — 4 cores, 4 gatinhos, alguns ✕. */
+function iconeB() {
+  const reg = ['aabb', 'cabb', 'cddb', 'ccdd'].join('');
+  const cor = { a: COR[0], b: COR[1], c: COR[3], d: COR[2] };
+  const gatos = [1, 7, 8, 14];
+  const xs = [0, 3, 4, 9, 13];
+  const m = 22, p = (512 - 2 * m) / 4;
+  let s = `<rect width="512" height="512" fill="#fbf6ee"/>`;
+  for (let i = 0; i < 16; i++) s += `<rect x="${m + (i % 4) * p}" y="${m + Math.floor(i / 4) * p}" width="${p + .5}" height="${p + .5}" fill="${cor[reg[i]]}"/>`;
+  let finas = '', grossas = '';
+  for (let l = 0; l < 4; l++) for (let c = 0; c < 4; c++) {
+    const i = l * 4 + c, X = m + c * p, Y = m + l * p;
+    if (c < 3) (reg[i] !== reg[i + 1] ? (grossas += `M${X + p} ${Y}V${Y + p}`) : (finas += `M${X + p} ${Y}V${Y + p}`));
+    if (l < 3) (reg[i] !== reg[i + 4] ? (grossas += `M${X} ${Y + p}H${X + p}`) : (finas += `M${X} ${Y + p}H${X + p}`));
+  }
+  s += `<path d="${finas}" stroke="${TINTA}" stroke-opacity=".18" stroke-width="3"/>`;
+  s += `<path d="${grossas}" stroke="${TINTA}" stroke-width="12" stroke-linecap="round"/>`;
+  s += `<rect x="${m}" y="${m}" width="${512 - 2 * m}" height="${512 - 2 * m}" rx="34" fill="none" stroke="${TINTA}" stroke-width="16"/>`;
+  gatos.forEach(i => (s += gato(m + (i % 4) * p + p * .1, m + Math.floor(i / 4) * p + p * .08, p * .8)));
+  xs.forEach(i => (s += xis(m + (i % 4) * p + p / 2, m + Math.floor(i / 4) * p + p / 2, p * .14)));
+  return s;
+}
+
+/** C: o gatinho grande, na frente de uma faixa de casinhas coloridas. */
+function iconeC() {
+  let s = `<rect width="512" height="512" fill="#f8d0aa"/>`;
+  const faixa = [0, 1, 2, 3, 4, 6];
+  // duas fileiras de casinhas atrás do gato
+  for (let l = 0; l < 2; l++) faixa.forEach((c, i) => {
+    s += `<rect x="${-30 + i * 96 + l * 48}" y="${300 + l * 96}" width="90" height="90" rx="16" fill="${COR[faixa[(i + l * 3) % faixa.length]]}" stroke="${TINTA}" stroke-width="7"/>`;
+  });
+  return s + gato(46, 30, 420);
+}
+
+const svg = corpo => `<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">${corpo}</svg>`;
+const opcoes = [
+  ['A', 'Mesmo ícone, gatinho novo', 'O desenho de hoje (9 casinhas coloridas), só trocando o emoji pelo gatinho do jogo. Quem já conhece reconhece na hora.', iconeA()],
+  ['B', 'Mini-fase resolvida', 'Uma fase 4×4 pronta: cada linha, coluna e cor com 1 gatinho, e alguns ✕. Mostra o jogo de verdade.', iconeB()],
+  ['C', 'Gatinho grande', 'O gatinho em destaque, na frente de casinhas coloridas. É o que mais aparece pequeno na tela.', iconeC()],
+];
+document.getElementById('opcoes').innerHTML = opcoes.map(([l, t, p, c]) =>
+  `<div class="opcao"><h2>${l} · ${t}</h2><p>${p}</p><div class="grande">${svg(c)}</div></div>`).join('');
+document.getElementById('tela').innerHTML =
+  `<div class="app"><img src="../public/icone-512.png">Hoje</div>` +
+  opcoes.map(([l, , , c]) => `<div class="app">${svg(c)}Opção ${l}</div>`).join('') +
+  '<div class="app"><div class="vazio"></div>&nbsp;</div>'.repeat(4);
+window.ICONES = Object.fromEntries(opcoes.map(([l, , , c]) => [l, svg(c)]));
+</script>
+</body>
+</html>
