@@ -2,7 +2,7 @@
  * Uma partida de uma fase: as marcas do jogador, os corações e o "desfazer".
  * Não sabe nada de tela; a tela chama estas funções.
  */
-import { ehResposta, seAtacam, unidades, type Fase } from './fase.ts';
+import { ehResposta, seAtacam, unidades, type Fase, type Unidade } from './fase.ts';
 import type { Marca } from './dica.ts';
 import { CORACOES } from './regras.ts';
 
@@ -65,20 +65,32 @@ export function porGato(j: Jogo, f: Fase, casa: number, preguica: boolean): Resu
 
 export const gatosPostos = (j: Jogo) => j.marcas.filter(m => m === 'gato').length;
 
+export interface Preguica2 {
+  /** casas onde SÓ CABE UM GATO (sempre casas que têm gato) */
+  casas: number[];
+  /** linhas, colunas ou cores onde algum ✕ está errado (a única casa livre não é a do gato, ou não sobrou nenhuma) */
+  xErrado: Unidade[];
+}
+
 /**
- * Modo preguiça 2: casas onde SÓ CABE UM GATO — a única casa livre de uma linha,
- * coluna ou cor que ainda não tem gato.
- * "Livre" conta só os gatos já postos (que sempre estão certos), e não os ✕ feitos
- * à mão: assim um ✕ errado do jogador nunca faz o jogo apontar uma casa errada.
+ * Modo preguiça 2: procura a linha, coluna ou cor sem gato que tem UMA casa livre só.
+ * "Livre" = sem ✕ (de qualquer jeito: à mão, da dica ou automático) e sem gato que a bloqueie.
+ * Se essa casa é a do gato, ela acende. Se não é (ou se não sobrou nenhuma casa livre),
+ * algum ✕ dessa linha/coluna/cor está errado: o jogo avisa, sem acender casa errada.
  */
-export function casasSoCabeUm(f: Fase, marcas: Marca[]): number[] {
+export function preguica2(f: Fase, marcas: Marca[]): Preguica2 {
   const gatos = marcas.flatMap((m, s) => (m === 'gato' ? [s] : []));
-  const livre = (s: number) => marcas[s] !== 'gato' && !gatos.some(g => seAtacam(f, g, s));
+  const livre = (s: number) => marcas[s] === '' && !gatos.some(g => seAtacam(f, g, s));
   const achadas = new Set<number>();
+  const xErrado: Unidade[] = [];
   for (const u of unidades(f)) {
     if (u.casas.some(s => marcas[s] === 'gato')) continue;
     const livres = u.casas.filter(livre);
-    if (livres.length === 1 && marcas[livres[0]] !== 'x') achadas.add(livres[0]);
+    if (livres.length === 1 && ehResposta(f, livres[0])) achadas.add(livres[0]);
+    else if (livres.length <= 1) xErrado.push(u);
   }
-  return [...achadas].sort((a, b) => a - b);
+  return { casas: [...achadas].sort((a, b) => a - b), xErrado };
 }
+
+/** Só as casas que acendem na preguiça 2. */
+export const casasSoCabeUm = (f: Fase, marcas: Marca[]) => preguica2(f, marcas).casas;

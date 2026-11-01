@@ -3,9 +3,9 @@
  * Liga os toques e botões às regras (src/motor) e guarda o progresso (src/ui/salvar).
  */
 import './estilo.css';
-import type { Fase } from './motor/fase.ts';
+import type { Fase, Unidade } from './motor/fase.ts';
 import { acharDica, type Dica } from './motor/dica.ts';
-import { apagarTodosX, casasSoCabeUm, definirX, desfazer, gatosPostos, guardar, novoJogo, porGato, type Jogo } from './motor/jogo.ts';
+import { apagarTodosX, definirX, desfazer, gatosPostos, guardar, novoJogo, porGato, preguica2, type Jogo } from './motor/jogo.ts';
 import { FASES_POR_TAMANHO, FOLGA_DUPLO_TOQUE, TAMANHOS, TEMPO_DUPLO_TOQUE_MS } from './motor/regras.ts';
 import { htmlBotaoPreguica, htmlCartaoDica, htmlConta, htmlEscolhaGatinho, htmlInicio, htmlJanela, htmlJogo, icone, montarGrade, textoSituacao } from './ui/desenho.ts';
 import { abrirTutorial, jaViuTutorial } from './ui/tutorial.ts';
@@ -132,13 +132,29 @@ function atualizar() {
   grade.querySelectorAll<HTMLElement>('.casa').forEach((el, s) => {
     el.className = 'casa' + (jogo!.marcas[s] ? ' ' + jogo!.marcas[s] : '');
   });
-  // preguiça 2: acende as casas onde só cabe um gato
+  // preguiça 2: acende as casas onde só cabe um gato, e avisa onde tem ✕ errado
+  let aviso = '';
   if (salvo.preguica === 2 && fase) {
-    for (const s of casasSoCabeUm(fase, jogo.marcas)) grade.children[s].classList.add('so-cabe');
+    const p2 = preguica2(fase, jogo.marcas);
+    for (const s of p2.casas) grade.children[s].classList.add('so-cabe');
+    for (const u of p2.xErrado) for (const s of u.casas) grade.children[s].classList.add('x-errado');
+    aviso = textoXErrado(p2.xErrado);
   }
+  if (aviso && aviso !== avisoAnterior) toast(aviso);
+  avisoAnterior = aviso;
   app.querySelectorAll('#vidas svg').forEach((c, i) => c.setAttribute('class', `ic ${i < jogo!.coracoes ? 'cheio' : 'vazio'}`));
   tocar(salvo, n);
   salvar(salvo);
+}
+
+/** Último aviso de ✕ errado (para não repetir o mesmo aviso a cada toque). */
+let avisoAnterior = '';
+
+function textoXErrado(us: Unidade[]) {
+  if (!us.length) return '';
+  if (us.length > 1) return '⚠️ Tem ✕ errado no que ficou vermelho';
+  const u = us[0];
+  return `⚠️ Tem um ✕ errado ${u.tipo === 'linha' ? `na linha ${u.id + 1}` : u.tipo === 'coluna' ? `na coluna ${u.id + 1}` : 'nesta cor'}`;
 }
 
 /** Aviso rápido em cima da grade, que some sozinho. */
@@ -246,8 +262,10 @@ function tentarGato(casa: number) {
   atualizar();
   if (r === 'certo') {
     const faltam = n - gatosPostos(jogo);
-    const soCabe = salvo.preguica === 2 ? casasSoCabeUm(fase, jogo.marcas).length : 0;
-    if (soCabe) toast(soCabe === 1 ? '✨ 1 casa só pode ter gato' : `✨ ${soCabe} casas só podem ter gato`);
+    const p2 = salvo.preguica === 2 ? preguica2(fase, jogo.marcas) : null;
+    const soCabe = p2?.casas.length ?? 0;
+    if (p2?.xErrado.length) toast(textoXErrado(p2.xErrado)); // o aviso do ✕ errado vem primeiro
+    else if (soCabe) toast(soCabe === 1 ? '✨ 1 casa só pode ter gato' : `✨ ${soCabe} casas só podem ter gato`);
     else toast(faltam === 1 ? 'Isso! Falta 1 gato.' : `Isso! Faltam ${faltam} gatos.`);
   } else if (r === 'errado' || r === 'perdeu') {
     const el = $('#grade').children[casa] as HTMLElement;
@@ -269,7 +287,7 @@ function venceu() {
   tocar(salvo, n);
   salvar(salvo);
   const ultima = p.fase >= FASES_POR_TAMANHO;
-  setTimeout(() => janela('🎉' + svgGatinho(idGatinho(salvo.gatinho)), `Fase ${numero + 1} concluída!`, 'Todos os gatos têm seu cantinho.', [
+  setTimeout(() => tela === 'jogo' && janela('🎉' + svgGatinho(idGatinho(salvo.gatinho)), `Fase ${numero + 1} concluída!`, 'Todos os gatos têm seu cantinho.', [
     ultima
       ? { id: 'j-inicio', rotulo: 'Voltar ao início', acao: mostrarInicio }
       : { id: 'j-proxima', rotulo: 'Próxima fase', acao: () => abrirTamanho(n) },
