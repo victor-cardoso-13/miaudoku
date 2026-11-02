@@ -12,6 +12,7 @@ import { abrirTutorial, jaViuTutorial } from './ui/tutorial.ts';
 import { aplicarGatinho, idGatinho, svgGatinho } from './ui/gatinhos.ts';
 import { carregarFase } from './ui/pacotes.ts';
 import { carregar, progresso, salvar, tocar } from './ui/salvar.ts';
+import { escapar } from './ui/seguranca.ts';
 import {
   carregarConta, enviarAgora, iniciarNuvem, levarProgressoSemConta, progressoSemConta, sairDaConta,
   sincronizar, situacaoAtual, trocarGaveta, usuarioAtual,
@@ -468,7 +469,6 @@ function esperarUsuario(): Promise<NonNullable<ReturnType<typeof usuarioAtual>>>
   });
 }
 
-const escapar = (t: string) => t.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
 /** Botão de conta (canto da tela inicial): entrar, ver a situação, "Como jogar" e sair. */
 function abrirMenuConta() {

@@ -6,6 +6,7 @@ import type { Fase } from '../motor/fase.ts';
 import { progresso, type Salvo } from './salvar.ts';
 import type { Situacao } from '../nuvem/sincronia.ts';
 import { GATINHOS, svgGatinho, type IdGatinho } from './gatinhos.ts';
+import { escapar } from './seguranca.ts';
 
 // ---------------------------------------------------------------------------
 // Ícones de traço (o mesmo estilo em todas as telas)
@@ -38,7 +39,6 @@ export const selo = (texto: string, nivel: string) => {
   return `<span class="selo" style="background:${fundo};color:${cor}">${texto}</span>`;
 };
 
-const escapar = (t: string) => t.replace(/[&<>"']/g, c => `&#${c.charCodeAt(0)};`);
 
 // ---------------------------------------------------------------------------
 // Grade (a do jogo e as prévias pequenas)
