@@ -13,6 +13,7 @@ import { aplicarGatinho, idGatinho, svgGatinho } from './ui/gatinhos.ts';
 import { carregarFase } from './ui/pacotes.ts';
 import { carregar, progresso, salvar, tocar } from './ui/salvar.ts';
 import { escapar } from './ui/seguranca.ts';
+import { mostrarSugestao } from './ui/sugestao.ts';
 import {
   carregarConta, enviarAgora, iniciarNuvem, levarProgressoSemConta, progressoSemConta, sairDaConta,
   sincronizar, situacaoAtual, trocarGaveta, usuarioAtual,
@@ -477,15 +478,31 @@ function abrirMenuConta() {
   const zerar = { id: 'j-zerar', rotulo: 'Zerar progresso', claro: true, acao: confirmarZerar };
   const gatinho = { id: 'j-gatinho', rotulo: 'Escolher gatinho', claro: true, acao: escolherGatinho };
   const fechar = { id: 'j-fechar', rotulo: 'Fechar', claro: true, acao: desenharInicio };
+  const sugestao = { id: 'j-sugestao', rotulo: '💬 Dar sugestão', claro: true, acao: abrirSugestao };
   if (!u) {
     janela('☁️', 'Sua conta', 'Sem conta, o seu progresso fica só neste aparelho. Com uma conta, ele fica guardado na nuvem.', [
       { id: 'j-entrar', rotulo: 'Entrar ou criar conta', acao: abrirConta }, gatinho, comoJogar, zerar, fechar,
     ]);
   } else {
     janela('👤', escapar(u.email), textoSituacao(situacaoAtual()), [
-      gatinho, comoJogar, zerar, { id: 'j-sair-conta', rotulo: 'Sair da conta', claro: true, acao: confirmarSair }, fechar,
+      gatinho, comoJogar, zerar, sugestao, { id: 'j-sair-conta', rotulo: 'Sair da conta', claro: true, acao: confirmarSair }, fechar,
     ]);
   }
+}
+
+/** Tela "Dar sugestão" (só com conta). Fica dentro de uma #tampa para a tela inicial não se redesenhar por baixo e apagar o texto. */
+async function abrirSugestao() {
+  const c = await carregarConta();
+  app.querySelector('#tampa')?.remove();
+  const tampa = document.createElement('div');
+  tampa.id = 'tampa';
+  tampa.className = 'tampa tampa-sug';
+  app.appendChild(tampa);
+  mostrarSugestao(tampa, {
+    enviar: c.enviarSugestao,
+    erro: c.mensagemDeErro,
+    aoFechar: () => { tampa.remove(); desenharInicio(); },
+  });
 }
 
 /** Janela para escolher o desenho do gatinho (vale na hora, e fica salvo com o progresso). */

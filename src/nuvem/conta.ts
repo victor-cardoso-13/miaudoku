@@ -9,7 +9,7 @@ import {
   createUserWithEmailAndPassword, getAuth, onAuthStateChanged, sendPasswordResetEmail,
   signInWithEmailAndPassword, signOut,
 } from 'firebase/auth';
-import { doc, getDoc, getFirestore, setDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getFirestore, serverTimestamp, setDoc } from 'firebase/firestore';
 import { firebaseConfig } from './config.ts';
 import type { DadosNuvem } from './mesclar.ts';
 
@@ -57,6 +57,18 @@ export async function enviar(uid: string, dados: DadosNuvem) {
   await setDoc(lugar(uid), dados);
 }
 
+/**
+ * Sugestão do jogador (caixinha "Dar sugestão"). Só com conta. Vai para a coleção `sugestoes`;
+ * as regras do servidor deixam só CRIAR a própria (ninguém lê, muda nem apaga pelo app).
+ */
+export async function enviarSugestao(texto: string) {
+  const u = auth.currentUser;
+  if (!u || !u.email) throw Object.assign(new Error('sem conta'), { code: 'auth/requires-login' });
+  await addDoc(collection(banco, 'sugestoes'), {
+    uid: u.uid, email: u.email, jogo: JOGO, texto, criadoEm: serverTimestamp(),
+  });
+}
+
 /** Mensagens do Firebase em português simples. */
 export function mensagemDeErro(e: unknown): string {
   const codigo = (e as { code?: string })?.code ?? '';
@@ -71,6 +83,8 @@ export function mensagemDeErro(e: unknown): string {
     'auth/wrong-password': 'E-mail ou senha incorretos.',
     'auth/user-not-found': 'E-mail ou senha incorretos.',
     'auth/too-many-requests': 'Muitas tentativas seguidas. Espere alguns minutos e tente de novo.',
+    'auth/requires-login': 'Entre na sua conta para mandar a sugestão.',
+    unavailable: 'Sem internet agora. Tente de novo quando a internet voltar.',
     'auth/network-request-failed': 'Sem internet agora. Tente de novo quando a internet voltar.',
   };
   return mensagens[codigo] ?? 'Algo deu errado. Tente de novo daqui a pouco.';
